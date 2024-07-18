@@ -151,13 +151,33 @@ echo " "
 echo -e "${_OK_}tegia user '${MYSQL_USER}' is created on MySQL"
 
 
+# /////////////////////////////////////////////////////////////////////////////////////////////////////
+#
+# MAIN CONFIG FILES
+#
+# /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+cp "${tep_folder}/.default/config.json" "${tep_folder}/config.json"
+
+
+# validate
+
+if jq -e . ${tep_folder}/config.json >/dev/null; then
+    echo -e "${_OK_}create 'config.json'"
+else
+    echo "${_ERR_} in 'config.json'"
+    exit 1
+fi
+
+
 # ////////////////////////////////////////////////////////////////////////////////////////
 #
 # INSTALL CONFIGURATIONS
 #
 # ////////////////////////////////////////////////////////////////////////////////////////
 
-jq -c '.configurations[]' ./.default/config.json | while read -r item; do
+jq -c '.configurations[]' ${tep_folder}/config.json | while read -r item; do
     file=$(echo "$item" | jq -r '.file')
     isload=$(echo "$item" | jq -r '.isload')
     name=$(echo "$item" | jq -r '.name')
@@ -186,25 +206,6 @@ done
 # tegia_conf_install http tegia-node main
 # tegia_conf_install example tegia-node example-01
 
-
-# /////////////////////////////////////////////////////////////////////////////////////////////////////
-#
-# MAIN CONFIG FILES
-#
-# /////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-cp "${tep_folder}/.default/config.json" "${tep_folder}/config.json"
-
-
-# validate
-
-if jq -e . ${tep_folder}/config.json >/dev/null; then
-    echo -e "${_OK_}create 'config.json'"
-else
-    echo "${_ERR_} in 'config.json'"
-    exit 1
-fi
 
 
 # /////////////////////////////////////////////////////////////////////////////////////////////////////
