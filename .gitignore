@@ -1,0 +1,8 @@
+/configurations
+/tegia-node
+/*.log
+
+/config.json
+/jwt_keys
+
+/.default/scripts/params.sh

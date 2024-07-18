@@ -1,0 +1,36 @@
+{
+	"name": "example-conf",
+	"path": "{PATH_TO_CONFIG}",
+	"types":
+	{
+		"EXAMPLE::CONSOLE": 
+		{
+			"is_unloaded": true,
+			"path": "/bin/libCONSOLE.so",
+			"patterns":
+			[
+				"example/console"
+			]
+		},	
+		"EXAMPLE::PHONE": 
+		{
+			"is_unloaded": true,
+			"path": "/bin/libPHONE.so",
+			"patterns":
+			[
+				"example/phone",
+				"example/phone/task/*"
+			]
+		}		
+	},
+	"db": {},
+	"init":
+	[
+		{
+			"actor": "example/console",
+			"action": "/in",
+			"data": {}
+		}
+	]
+
+}

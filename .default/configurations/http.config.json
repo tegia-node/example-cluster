@@ -1,0 +1,50 @@
+{
+	"name": "http.configuration",
+	"path": "{PATH_TO_CONFIG}",
+	"types":
+	{
+		"HTTP::LISTENER": 
+		{
+			"is_unloaded": true,
+			"path": "/bin/libLISTENER.so",
+			"patterns":
+			[
+				"http/listener"
+			]
+		},
+		"HTTP::CONNECTION": 
+		{
+			"path": "/bin/libCONNECTION.so",
+			"patterns":
+			[
+				"http/connection/*"
+			]
+		}
+	},
+	"init":
+	[
+		{
+			"actor": "http/listener",
+			"action": "/init",
+			"data": 
+			{
+				"fcgi":
+				{
+					"host" : "127.0.0.1:{TEGIA_PORT}",
+					"listen_queue_backlog": 400
+				},
+				"cookie":
+				{
+					"maxage": 604800,
+					"same_site": "Lex",
+					"http_only": true
+				},
+				"cors":
+				{
+					"alloworigin": true
+				}
+			}
+		}
+	]
+
+}

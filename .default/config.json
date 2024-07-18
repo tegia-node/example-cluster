@@ -1,0 +1,27 @@
+{
+	"application": "example",
+	"nodes":
+	{
+		"mycheck":
+		{
+			"domains": [ "example" ],
+			"thread":
+			{
+				"count": 6
+			}
+		}
+	},
+	"configurations":
+	[
+		{
+			"file" : "./configurations/example-conf.json",
+			"isload" : true,
+			"name" : "example-conf",
+			"repository":
+			{
+				"url": "git@github.com:tegia-node/example-conf.git",
+				"branch": "example-01"
+			}
+		}
+	]
+}
