@@ -105,7 +105,7 @@ tegia_conf_install()
 
 	cp "${tep_folder}/.default/configurations/${1}.json" "${tep_folder}/configurations/$1.json"
 	
-	sed -i -e "s|{PATH_TO_CONFIG}|${root_folder}/configurations/$1-conf|g" "${tep_folder}/configurations/$1.json"
+	sed -i -e "s|{PATH_TO_CONFIG}|${root_folder}/configurations/$1|g" "${tep_folder}/configurations/$1.json"
 	sed -i -e "s|{MYSQL_DB_PREFIX}|$MYSQL_DB_PREFIX|g" "${tep_folder}/configurations/$1.json"
 	sed -i -e "s|{MYSQL_HOST}|$MYSQL_HOST|g" "${tep_folder}/configurations/$1.json"
 	sed -i -e "s|{MYSQL_PORT}|$MYSQL_PORT|g" "${tep_folder}/configurations/$1.json"
