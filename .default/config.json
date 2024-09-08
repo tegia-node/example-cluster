@@ -2,7 +2,7 @@
 	"application": "example",
 	"nodes":
 	{
-		"mycheck":
+		"base":
 		{
 			"domains": [ "example" ],
 			"thread":
@@ -11,18 +11,16 @@
 			}
 		}
 	},
+	"tegia-node":
+	{
+		"repository":
+		{
+			"url": "git@github.com:tegia-node/tegia-node.git",
+			"branch": "develop"
+		}
+	},
 	"configurations":
 	[
-		{
-			"file" : "./configurations/http-conf.json",
-			"isload" : true,
-			"name" : "http-conf",
-			"repository":
-			{
-				"url": "git@github.com:tegia-node/http-conf.git",
-				"branch": "v3"
-			}
-		},
 		{
 			"file" : "./configurations/example-conf.json",
 			"isload" : true,
@@ -33,5 +31,10 @@
 				"branch": "example-01"
 			}
 		}
-	]
+	],
+	"dictionaries":
+	{
+		"ISO 3166-1": "/home/igor/tegia_example/tegia-node/dicts/001.json",
+		"ITU-T E.164": "/home/igor/tegia_example/tegia-node/dicts/002.json"
+	}
 }

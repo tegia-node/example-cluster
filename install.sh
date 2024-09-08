@@ -100,27 +100,56 @@ password=$MYSQL_PASSWORD
 EOF
 
 
+# /////////////////////////////////////////////////////////////////////////////////////////////////////
+#
+# MAIN CONFIG FILES
+#
+# /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+cp "${tep_folder}/.default/config.json" "${tep_folder}/config.json"
+
+# validate
+
+if jq -e . ${tep_folder}/config.json >/dev/null; then
+    echo -e "${_OK_}create 'config.json'"
+else
+    echo "${_ERR_} in 'config.json'"
+    exit 1
+fi
+
+
 # ////////////////////////////////////////////////////////////////////////////////////////
 #
 # Tegia Node INSTALL
 #
 # ////////////////////////////////////////////////////////////////////////////////////////
 
+#
+# Чтение JSON-файла и извлечение значений полей
+#
 
-if ! [ -d  ${root_folder}/tegia-node/ ]
+REPOS_URL=$(jq -r '.["tegia-node"].repository.url' ${tep_folder}/config.json)
+REPOS_BRANCH=$(jq -r '.["tegia-node"].repository.branch' ${tep_folder}/config.json)
+
+# Вывод значений
+echo "REPOS_URL: $REPOS_URL"
+echo "REPOS_BRANCH: $REPOS_BRANCH"
+
+
+if ! [ -d  ${root_folder}/tegia-node@${REPOS_BRANCH}/ ]
 then
 	cd ${root_folder};
-	git clone git@github.com:tegia-node/tegia-node.git
-	cd ${root_folder}/tegia-node/
-	git checkout develop
+	git clone $REPOS_URL "tegia-node@${REPOS_BRANCH}" 
+	cd ${root_folder}/tegia-node@${REPOS_BRANCH}/
+	git checkout ${REPOS_BRANCH}
 
-	cd ${root_folder}/tegia-node/
 	bash ./install.sh
 else
 	echo "${_OK_}tegia node is already installed"
 fi
 
-sudo ln -fs "${root_folder}/tegia-node/build/tegia-node" "${tep_folder}/tegia-node"
+sudo ln -fs "${root_folder}/tegia-node@${REPOS_BRANCH}/build/tegia-node" "${tep_folder}/tegia-node"
 
 
 # ////////////////////////////////////////////////////////////////////////////////////////
@@ -151,31 +180,14 @@ echo " "
 echo -e "${_OK_}tegia user '${MYSQL_USER}' is created on MySQL"
 
 
-# /////////////////////////////////////////////////////////////////////////////////////////////////////
-#
-# MAIN CONFIG FILES
-#
-# /////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-cp "${tep_folder}/.default/config.json" "${tep_folder}/config.json"
-
-
-# validate
-
-if jq -e . ${tep_folder}/config.json >/dev/null; then
-    echo -e "${_OK_}create 'config.json'"
-else
-    echo "${_ERR_} in 'config.json'"
-    exit 1
-fi
-
 
 # ////////////////////////////////////////////////////////////////////////////////////////
 #
 # INSTALL CONFIGURATIONS
 #
 # ////////////////////////////////////////////////////////////////////////////////////////
+
+cd ${tep_folder}/configurations
 
 jq -c '.configurations[]' ${tep_folder}/config.json | while read -r item; do
     file=$(echo "$item" | jq -r '.file')
