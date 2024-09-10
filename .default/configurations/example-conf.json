@@ -11,17 +11,7 @@
 			[
 				"example/console"
 			]
-		},	
-		"EXAMPLE::PHONE": 
-		{
-			"is_unloaded": true,
-			"path": "/bin/libPHONE.so",
-			"patterns":
-			[
-				"example/phone",
-				"example/phone/task/*"
-			]
-		}		
+		}	
 	},
 	"db": {},
 	"init":
