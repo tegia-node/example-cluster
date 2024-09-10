@@ -16,7 +16,7 @@
 		"repository":
 		{
 			"url": "git@github.com:tegia-node/tegia-node.git",
-			"branch": "develop"
+			"branch": "main"
 		}
 	},
 	"configurations":
