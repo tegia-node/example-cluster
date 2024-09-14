@@ -173,6 +173,9 @@ done
 #
 # /////////////////////////////////////////////////////////////////////////////////////////////////////
 
+mkdir -p "${ROOT_PATH}/data"
+cd ${ROOT_PATH}/data
+
 if echo "${CONFIG}" | jq -e '.data' > /dev/null; then
 
 	_params=$(echo "${CONFIG}" | jq -r '.data | keys[]')  # Получаем список параметров
