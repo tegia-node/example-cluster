@@ -1,14 +1,8 @@
 #!/bin/bash
 
 cd ./.default/scripts/
-source ./functions.sh
+source ./const.sh
 cd ../..
-
-tep_folder=$(realpath ./)
-root_folder=$(realpath ../../)
-
-conf_path="";
-
 
 echo " "
 echo "------------------------------------------------------------"
@@ -16,82 +10,65 @@ echo "${CLUSTER_NAME}: ${GREEN} CLUSTER DEPLOYMENT ${RESET}"
 echo "------------------------------------------------------------"
 echo " "
 
-mkdir -p ${tep_folder}/configurations
+cd ./.default/scripts/
+source ./functions.sh
+source ./params.sh
+cd ../..
 
-
-# ////////////////////////////////////////////////////////////////////////////////////////
+# /////////////////////////////////////////////////////////////////////////////////////////////////////
 #
-# INSTALL QUESTIONS
+# PARAMS INIT
 #
-# ////////////////////////////////////////////////////////////////////////////////////////
-
-#
-# NGINX HOST
-#
-
-# echo "${YELLOW}HOST${RESET}"
-# echo " "
-
-# echo "${YELLOW}leaks application${RESET}"
-# LEAKS_HOST=$(read_val "Укажите виртуальный хост" ${LEAKS_HOST})
-# LEAKS_APP=$(read_val "Укажите используемое для аутентификации имя приложения" ${LEAKS_APP})
-# echo " "
-
-# TEGIA_FCGI_PORT=$(read_val "Укажите порт для FCGI" ${TEGIA_FCGI_PORT})
-# TEGIA_AUTH=$(read_val "Укажите используемый сервер аутентификации" ${TEGIA_AUTH})
+# /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #
-# MYSQL CONNECTION
+# READ PARAMS
 #
 
-echo " "
-echo "${YELLOW}MYSQL DB CONNECTION${RESET}"
-echo " "
-
-MYSQL_HOST=$(read_val "Укажите mysql host" ${MYSQL_HOST})
-MYSQL_PORT=$(read_val "Укажите mysql port" ${MYSQL_PORT})
-MYSQL_DB_PREFIX=$(read_val "Укажите db prefix" ${MYSQL_DB_PREFIX})
-MYSQL_USER=$(read_val "Укажите mysql user" ${MYSQL_USER})
-
-while [[ -z "$mysql_password" ]]; do
-    read -srp "Укажите пароль для подключения к MySQL: " mysql_password
-    if [[ -z "$mysql_password" ]]; then
-        echo -e "\n${_ERR_}Пароль не может быть пустым"
-    else
-        break
-    fi
-done
-
-MYSQL_PASSWORD=${mysql_password}
-
-echo " "
+PARAMS=$(get_params_data)
+ask_user
 
 #
-# SAVE params.sh FILE
+# INIT MAIN CONFIG
 #
 
-tee ./.default/scripts/params.sh << EOF > /dev/null
-#!/bin/bash
+CONFIG=$(init_config_file "${CLUSTER_PATH}/.default/config.json" "${PARAMS}")
 
-export TEGIA_HOST=$TEGIA_HOST
-export TEGIA_APP=$TEGIA_APP
-export TEGIA_FCGI_PORT=$TEGIA_FCGI_PORT
-export TEGIA_AUTH=$TEGIA_AUTH
+#
+# Проверяем наличие ключа "domains"
+#
 
-export MYSQL_HOST=$MYSQL_HOST
-export MYSQL_PORT=$MYSQL_PORT
-export MYSQL_DB_PREFIX=$MYSQL_DB_PREFIX
-export MYSQL_USER=$MYSQL_USER
-export MYSQL_PASSWORD=$MYSQL_PASSWORD
-EOF
+if echo "$PARAMS" | jq -e '.domains' > /dev/null; then
 
-echo " "
+	INIT=$(echo "$PARAMS" | jq '{
+	"init": [
+		.domains[] | {
+		"actor": "http/listener",
+		"action": "/domain/add",
+		"data": .
+		}
+	]
+	}')
+
+	CONFIG=$(json_add_field "$CONFIG" "$INIT")
+
+fi
+
+echo "$CONFIG" > "${CLUSTER_PATH}/config.json"
 
 #
 # SAVE mysql.cnf FILE
 #
 
-tee ./configurations/mysql.cnf << EOF > /dev/null
+mkdir -p "${CLUSTER_PATH}/configurations"
+
+MYSQL_HOST=$(echo "$PARAMS" | jq -r '.mysql.host')
+MYSQL_PORT=$(echo "$PARAMS" | jq -r '.mysql.port')
+MYSQL_DB_PREFIX=$(echo "$PARAMS" | jq -r '.mysql.prefix')
+MYSQL_USER=$(echo "$PARAMS" | jq -r '.mysql.user')
+MYSQL_PASSWORD=$(echo "$PARAMS" | jq -r '.mysql.password')
+
+tee "${CLUSTER_PATH}/configurations/mysql.cnf" << EOF > /dev/null
 [mysql]
 host=$MYSQL_HOST
 port=$MYSQL_PORT
@@ -102,61 +79,37 @@ EOF
 
 # /////////////////////////////////////////////////////////////////////////////////////////////////////
 #
-# MAIN CONFIG FILES
+# TEGIA NODE INSTALL
 #
 # /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-cp "${tep_folder}/.default/config.json" "${tep_folder}/config.json"
+REPOS_URL=$(jq -r '.["tegia-node"].repository.url' ${CLUSTER_PATH}/config.json)
+REPOS_BRANCH=$(jq -r '.["tegia-node"].repository.branch' ${CLUSTER_PATH}/config.json)
 
-# validate
+#echo "REPOS_URL: $REPOS_URL"
+#echo "REPOS_BRANCH: $REPOS_BRANCH"
 
-if jq -e . ${tep_folder}/config.json >/dev/null; then
-    echo -e "${_OK_}create 'config.json'"
-else
-    echo "${_ERR_} in 'config.json'"
-    exit 1
-fi
-
-
-# ////////////////////////////////////////////////////////////////////////////////////////
-#
-# Tegia Node INSTALL
-#
-# ////////////////////////////////////////////////////////////////////////////////////////
-
-#
-# Чтение JSON-файла и извлечение значений полей
-#
-
-REPOS_URL=$(jq -r '.["tegia-node"].repository.url' ${tep_folder}/config.json)
-REPOS_BRANCH=$(jq -r '.["tegia-node"].repository.branch' ${tep_folder}/config.json)
-
-# Вывод значений
-echo "REPOS_URL: $REPOS_URL"
-echo "REPOS_BRANCH: $REPOS_BRANCH"
-
-
-if ! [ -d  ${root_folder}/tegia-node@${REPOS_BRANCH}/ ]
+if ! [ -d  ${ROOT_PATH}/tegia-node@${REPOS_BRANCH}/ ]
 then
-	cd ${root_folder};
+	cd ${ROOT_PATH};
 	git clone $REPOS_URL "tegia-node@${REPOS_BRANCH}" 
-	cd ${root_folder}/tegia-node@${REPOS_BRANCH}/
+	cd ${ROOT_PATH}/tegia-node@${REPOS_BRANCH}/
 	git checkout ${REPOS_BRANCH}
 
 	bash ./install.sh
 else
-	echo "${_OK_}tegia node is already installed"
+	echo "${_OK_}${YELLOW}tegia node${RESET} is already installed"
 fi
 
-sudo ln -fs "${root_folder}/tegia-node@${REPOS_BRANCH}/build/tegia-node" "${tep_folder}/tegia-node"
+sudo ln -fs "${ROOT_PATH}/tegia-node@${REPOS_BRANCH}/build/tegia-node" "${CLUSTER_PATH}/tegia-node"
 
 
-# ////////////////////////////////////////////////////////////////////////////////////////
+# /////////////////////////////////////////////////////////////////////////////////////////////////////
 #
 # INIT MYSQL USER
 #
-# ////////////////////////////////////////////////////////////////////////////////////////
+# /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 export MYSQL_PWD=$(mysql_debian_password)
@@ -167,29 +120,28 @@ then
 	mysql -u debian-sys-maint --port=$MYSQL_PORT --execute="DROP USER '$MYSQL_USER'@'$MYSQL_HOST';"
 fi
 
-cp "${tep_folder}/.default/sql/user.sql" "${tep_folder}/user.sql_tmp"
-sed -i -e "s|{MYSQL_HOST}|$MYSQL_HOST|g" "${tep_folder}/user.sql_tmp"
-sed -i -e "s|{MYSQL_USER}|$MYSQL_USER|g" "${tep_folder}/user.sql_tmp"
-sed -i -e "s|{MYSQL_PASSWORD}|$MYSQL_PASSWORD|g" "${tep_folder}/user.sql_tmp" 
-sed -i -e "s|{MYSQL_DB_PREFIX}|$MYSQL_DB_PREFIX|g" "${tep_folder}/user.sql_tmp"
+cp "${CLUSTER_PATH}/.default/sql/user.sql" "${CLUSTER_PATH}/user.sql_tmp"
+sed -i -e "s|{MYSQL_HOST}|$MYSQL_HOST|g" "${CLUSTER_PATH}/user.sql_tmp"
+sed -i -e "s|{MYSQL_USER}|$MYSQL_USER|g" "${CLUSTER_PATH}/user.sql_tmp"
+sed -i -e "s|{MYSQL_PASSWORD}|$MYSQL_PASSWORD|g" "${CLUSTER_PATH}/user.sql_tmp" 
+sed -i -e "s|{MYSQL_DB_PREFIX}|$MYSQL_DB_PREFIX|g" "${CLUSTER_PATH}/user.sql_tmp"
 
-mysql -u debian-sys-maint --port=$MYSQL_PORT < ${tep_folder}/user.sql_tmp
-rm ${tep_folder}/user.sql_tmp
+mysql -u debian-sys-maint --port=$MYSQL_PORT < ${CLUSTER_PATH}/user.sql_tmp
+rm ${CLUSTER_PATH}/user.sql_tmp
 
-echo " "
-echo -e "${_OK_}tegia user '${MYSQL_USER}' is created on MySQL"
-
+echo -e "${_OK_}user '${YELLOW}${MYSQL_USER}${RESET}' is created on MySQL"
 
 
-# ////////////////////////////////////////////////////////////////////////////////////////
+# /////////////////////////////////////////////////////////////////////////////////////////////////////
 #
 # INSTALL CONFIGURATIONS
 #
-# ////////////////////////////////////////////////////////////////////////////////////////
+# /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-cd ${tep_folder}/configurations
 
-jq -c '.configurations[]' ${tep_folder}/config.json | while read -r item; do
+cd ${ROOT_PATH}/configurations
+
+jq -c '.configurations[]' ${CLUSTER_PATH}/config.json | while read -r item; do
     file=$(echo "$item" | jq -r '.file')
     isload=$(echo "$item" | jq -r '.isload')
     name=$(echo "$item" | jq -r '.name')
@@ -204,20 +156,49 @@ jq -c '.configurations[]' ${tep_folder}/config.json | while read -r item; do
 	# echo "branch:     $branch"
     # echo "------------------"
 
-	tegia_conf_install $name $repository $branch
+	PARAMS=$(json_update_element "${PARAMS}" ".paths.configuration" "$name")
+	PARAMS=$(json_update_element "${PARAMS}" ".paths.branch" "$branch")
+
+	# echo "${PARAMS}"
+
+	tegia_conf_install $name $repository $branch "${PARAMS}"
+
+	# echo "${_OK_}configuration '$name@$branch' installed successfull"
 
 done
 
-
+# /////////////////////////////////////////////////////////////////////////////////////////////////////
 #
-# $1 - configuration name
-# $2 - github organization name
-# $3 - branch name
+# INSTALL DATA
 #
+# /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-# tegia_conf_install http tegia-node main
-# tegia_conf_install example tegia-node example-01
+mkdir -p "${ROOT_PATH}/data"
+cd ${ROOT_PATH}/data
 
+if echo "${CONFIG}" | jq -e '.data' > /dev/null; then
+
+	_params=$(echo "${CONFIG}" | jq -r '.data | keys[]')  # Получаем список параметров
+
+	# Цикл по каждому параметру
+	for param in $_params; do
+		# Сохраняем имя параметра
+		param_name="$param"
+		
+		# Сохраняем объект параметра
+		param_object=$(echo "${CONFIG}" | jq -r ".data[\"$param\"]")
+		
+		# Вывод для проверки
+		#echo "Имя параметра: $param_name"
+		#echo "$param_object"
+
+		tegia_data_install "${param_name}" "${param_object}"
+	done
+
+#	tegia_clode_data()
+#	CONFIG=$(json_add_field "$CONFIG" "$INIT")
+
+fi
 
 
 # /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -226,30 +207,49 @@ done
 #
 # /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-sudo cp "${tep_folder}/.default/nginx/nginx.conf" "/etc/nginx/sites-available/${TEGIA_HOST}.conf"
-sudo sed -i -e "s|{TEGIA_HOST}|$TEGIA_HOST|g" "/etc/nginx/sites-available/${TEGIA_HOST}.conf"
-sudo sed -i -e "s|{TEGIA_PORT}|$TEGIA_FCGI_PORT|g" "/etc/nginx/sites-available/${TEGIA_HOST}.conf"
 
-sudo ln -fs "/etc/nginx/sites-available/${TEGIA_HOST}.conf" "/etc/nginx/sites-enabled/${TEGIA_HOST}.conf"
-sudo sh -c -e "echo '127.0.0.1 $TEGIA_HOST' >> /etc/hosts";
+TEGIA_FCGI_HOST=$(echo "$PARAMS" | jq -r '.http.host')
 
 #
-# JWT
+# Проверяем наличие ключа "domains"
 #
 
-echo " "
-echo "${YELLOW}JWT KEYS${RESET}"
-echo " "
+if echo "$PARAMS" | jq -e '.domains' > /dev/null; then
 
-cd ${tep_folder}
-bash jwt-key.sh ${TEGIA_HOST}
+	jq -c '.domains[]' ${CLUSTER_PATH}/params.json | while read -r item; do
+		#echo "$item"
+		HOST=$(echo "$item" | jq -r '.domain')
+
+		#
+		# HOST
+		#
+
+		sudo cp "${CLUSTER_PATH}/.default/nginx/nginx.conf" "/etc/nginx/sites-available/${HOST}.conf"
+		sudo sed -i -e "s|{TEGIA_HOST}|$HOST|g" "/etc/nginx/sites-available/${HOST}.conf"
+		sudo sed -i -e "s|{TEGIA_PORT}|$TEGIA_FCGI_HOST|g" "/etc/nginx/sites-available/${HOST}.conf"
+
+		sudo ln -fs "/etc/nginx/sites-available/${HOST}.conf" "/etc/nginx/sites-enabled/${HOST}.conf"
+		sudo sh -c -e "echo '127.0.0.1 $HOST' >> /etc/hosts";
+
+		#
+		# JWT
+		#
+
+		echo " "
+		echo "${YELLOW}JWT KEYS${RESET}"
+		echo " "
+
+		cd ${CLUSTER_PATH}
+		bash ./.default/scripts/jwt.sh ${HOST}
+
+	done
+
+fi
+
+
 
 echo " "
 echo "${GREEN}Установка выполнена успешно${RESET}"
 echo " "
 
 exit 0
-
-
-
-
