@@ -9,48 +9,13 @@ export RESET=`tput sgr0`
 export _OK_="${GREEN}[OK]  ${RESET}"
 export _ERR_="${RED}[ERR] ${RESET}"
 
-#
-# DEFAULT VALUES
-#
+export CLUSTER_NAME="EXAMPLE"
 
-CLUSTER_NAME="EXAMPLE"
+export CLUSTER_PATH=$(realpath ../../)
+export ROOT_PATH=$(realpath ../../../../)
 
-if [ -z ${TEGIA_HOST} ]
-then
-	TEGIA_HOST=example.tegia.local
-fi
+export CONFIG_TEMPLATE_FILE="$CLUSTER_PATH/.default/config.json"
+export CONFIG_FILE="$CLUSTER_PATH/config.json"
 
-if [ -z ${TEGIA_APP} ]
-then
-	TEGIA_APP=example_local
-fi
-
-if [ -z ${TEGIA_FCGI_PORT} ]
-then
-	TEGIA_FCGI_PORT=9090
-fi
-
-if [ -z ${TEGIA_AUTH} ]
-then
-	TEGIA_AUTH=id.tegia.ru
-fi
-
-if [ -z ${MYSQL_HOST} ]
-then
-	MYSQL_HOST=localhost
-fi
-
-if [ -z ${MYSQL_PORT} ]
-then
-	MYSQL_PORT=3306
-fi
-
-if [ -z ${MYSQL_DB_PREFIX} ]
-then
-	MYSQL_DB_PREFIX=example
-fi
-
-if [ -z ${MYSQL_USER} ]
-then
-	MYSQL_USER=tegia_example
-fi
+export PARAMS_TEMPLATE_FILE="$CLUSTER_PATH/.default/params.json"
+export PARAMS_FILE="$CLUSTER_PATH/params.json"

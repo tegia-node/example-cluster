@@ -5,4 +5,6 @@
 /config.json
 /jwt_keys
 
-/.default/scripts/params.sh
+/params.json
+
+/common/jwt_token.txt

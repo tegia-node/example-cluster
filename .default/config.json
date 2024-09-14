@@ -2,7 +2,7 @@
 	"application": "example",
 	"nodes":
 	{
-		"base":
+		"example":
 		{
 			"domains": [ "example" ],
 			"thread":
@@ -32,9 +32,16 @@
 			}
 		}
 	],
-	"dictionaries":
+	"data":
 	{
-		"ISO 3166-1": "/home/igor/tegia_example/tegia-node/dicts/001.json",
-		"ITU-T E.164": "/home/igor/tegia_example/tegia-node/dicts/002.json"
+		"dictionaries": 
+		{
+			"catalog": "%%.paths.root%%/data/dictionaries",
+			"repository":
+			{
+				"url": "git@github.com:tegia-node/dictionaries-data.git",
+				"branch": "main"
+			}			
+		}
 	}
 }
