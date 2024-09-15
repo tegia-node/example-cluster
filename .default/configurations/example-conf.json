@@ -1,6 +1,6 @@
 {
 	"name": "example-conf",
-	"path": "{PATH_TO_CONFIG}",
+	"path": "%%.paths.root%%/configurations/%%.paths.configuration%%@%%.paths.branch%%",
 	"types":
 	{
 		"EXAMPLE::CONSOLE": 
