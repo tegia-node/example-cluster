@@ -1,9 +1,9 @@
 # example-cluster
 
-Вводное видео про платформу Tegia Node: https://drive.google.com/file/d/11ZC2h6eGcEJ1CmVDRS0TqowaN0KP4zTn/view?usp=drive_link
-Examole 01: https://drive.google.com/file/d/1n-KOsTi-bD5PXCgS3toOQFXw-UM_BLgz/view?usp=drive_link
-Example 02: https://drive.google.com/file/d/1SHsuQie9Ci0114SzNN4qpqI6zt6y_mlY/view?usp=drive_link
-Example 02: https://drive.google.com/file/d/1XQeP4kHx6IcTqnGlugGhH8sq6XhTAl9e/view?usp=drive_link
+- Вводное видео про платформу Tegia Node: https://drive.google.com/file/d/11ZC2h6eGcEJ1CmVDRS0TqowaN0KP4zTn/view?usp=drive_link
+- Examole 01: https://drive.google.com/file/d/1n-KOsTi-bD5PXCgS3toOQFXw-UM_BLgz/view?usp=drive_link
+- Example 02: https://drive.google.com/file/d/1SHsuQie9Ci0114SzNN4qpqI6zt6y_mlY/view?usp=drive_link
+- Example 02: https://drive.google.com/file/d/1XQeP4kHx6IcTqnGlugGhH8sq6XhTAl9e/view?usp=drive_link
 
 # Инструкция по установке
 
